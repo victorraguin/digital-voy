@@ -26,6 +26,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
   const [conversationHistory, setConversationHistory] = useState<
     Array<{ role: "user" | "assistant"; content: string }>
   >([]);
+  const [isFlooding, setIsFlooding] = useState(false);
+  const [floodMessage, setFloodMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -49,6 +51,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
 
   const handleSendMessage = () => {
     if (!inputText.trim()) return;
+
+    // Vérifier si le quota est dépassé (strictement supérieur)
+    const totalMessagesAllowed = APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages;
+    if (userMessageCount > totalMessagesAllowed) {
+      setShowSubscriptionModal(true);
+      return;
+    }
+
+    // Empêcher l'envoi si l'IA est en train de répondre
+    if (isTyping) {
+      setIsFlooding(true);
+      setFloodMessage(
+        "Veuillez attendre la réponse de l'expert avant d'envoyer un nouveau message."
+      );
+      setTimeout(() => {
+        setIsFlooding(false);
+        setFloodMessage("");
+      }, 3000);
+      return;
+    }
 
     // Masquer l'écran d'accueil au premier message
     if (showWelcomeScreen) {
@@ -78,15 +100,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
     setInputText("");
     setIsTyping(true);
 
-    const totalMessagesAllowed = APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages;
-    if (newCount >= totalMessagesAllowed) {
-      setTimeout(() => {
-        setIsTyping(false);
-        setShowSubscriptionModal(true);
-      }, 1500);
-      return;
-    }
-
     // Générer une réponse avec OpenAI
     generatePsychicResponse(psychic, inputText, newHistory)
       .then((response) => {
@@ -106,6 +119,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
             { role: "assistant", content: response },
           ]);
           setIsTyping(false);
+
+          // Afficher la modale après la réponse si c'était le dernier message autorisé
+          if (newCount >= totalMessagesAllowed) {
+            setTimeout(() => {
+              setShowSubscriptionModal(true);
+            }, 1000);
+          }
         }, typingDelay);
       })
       .catch((error) => {
@@ -120,6 +140,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
 
           setMessages((prev) => [...prev, fallbackMessage]);
           setIsTyping(false);
+
+          // Afficher la modale après la réponse d'erreur si c'était le dernier message autorisé
+          if (newCount >= totalMessagesAllowed) {
+            setTimeout(() => {
+              setShowSubscriptionModal(true);
+            }, 1000);
+          }
         }, 2000);
       });
   };
@@ -192,7 +219,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
               <h2 className="text-base sm:text-lg font-semibold text-white truncate">
                 {psychic.name}
               </h2>
-              {userMessageCount >=
+              {userMessageCount >
                 APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages && (
                 <button
                   onClick={() => setShowSubscriptionModal(true)}
@@ -302,13 +329,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
               placeholder={
                 showWelcomeScreen
                   ? "Présentez-vous brièvement..."
-                  : userMessageCount >=
+                  : userMessageCount >
                     APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
                   ? "Quota dépassé - Cliquez pour continuer..."
                   : "Votre question..."
               }
               className={`w-full p-3 sm:p-4 pr-10 sm:pr-12 bg-white/10 border rounded-xl sm:rounded-2xl text-white placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm text-sm sm:text-base ${
-                userMessageCount >=
+                userMessageCount >
                 APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
                   ? "border-amber-500/50 bg-amber-500/5"
                   : "border-white/20"
@@ -319,30 +346,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ psychic, onBack }) => {
           </div>
           <button
             onClick={
-              userMessageCount >= APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
+              userMessageCount > APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
                 ? () => setShowSubscriptionModal(true)
                 : handleSendMessage
             }
             disabled={
-              !inputText.trim() &&
-              userMessageCount < APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
+              (!inputText.trim() &&
+                userMessageCount <=
+                  APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages) ||
+              isTyping
             }
             className={`flex-shrink-0 p-3 sm:p-4 rounded-full transition-all duration-200 ${
-              userMessageCount >= APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
-                ? "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
-                : inputText.trim()
+              userMessageCount > APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages
+                ? "bg-white/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+                : inputText.trim() && !isTyping
                 ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105"
                 : "bg-white/10 text-slate-400 cursor-not-allowed"
             }`}
           >
-            {userMessageCount >=
+            {userMessageCount >
             APP_CONFIG.MAX_MESSAGES_ALLOWED + paidMessages ? (
               <span className="text-xs font-medium">Continuer</span>
+            ) : isTyping ? (
+              <span className="text-xs font-medium">Attendre</span>
             ) : (
               <Send className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
         </div>
+
+        {/* Message d'erreur de flood */}
+        {isFlooding && (
+          <div className="mt-3 sm:mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm text-center">{floodMessage}</p>
+          </div>
+        )}
 
         {/* Debug counter */}
         <div className="mt-3 sm:mt-4 text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">

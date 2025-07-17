@@ -33,7 +33,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50 animate-fade-in">
-      <div className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-lg sm:max-w-2xl w-full border border-white/20 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+      <div className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-lg sm:max-w-4xl lg:max-w-6xl w-full border border-white/20 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-start mb-6 sm:mb-8">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full">
@@ -65,7 +65,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 
           {/* Options de paiement */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-            {/* Option 1: Paiement à la carte */}
+            {/* Option 1: Paiement à la carte - POPULAIRE */}
             <div
               className={`relative rounded-xl p-6 border-2 transition-all duration-200 cursor-pointer ${
                 selectedOption === "pay-per-use"
@@ -74,6 +74,11 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               }`}
               onClick={() => setSelectedOption("pay-per-use")}
             >
+              {/* Badge POPULAIRE - plus discret */}
+              <div className="absolute -top-2 -left-2 bg-emerald-500 text-white text-xs font-medium px-2 py-0.5 rounded-full shadow-md">
+                Recommandé
+              </div>
+
               {selectedOption === "pay-per-use" && (
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
                   <Check className="w-4 h-4 text-white" />
@@ -88,7 +93,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   <h3 className="text-lg font-semibold text-white">
                     Paiement à la carte
                   </h3>
-                  <p className="text-sm text-emerald-300">Sans engagement</p>
+                  <p className="text-sm text-emerald-300">Le plus économique</p>
                 </div>
               </div>
 
@@ -108,7 +113,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
                   <span className="text-sm text-slate-300">
-                    Messages supplémentaires immédiats
+                    Prix le plus avantageux
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -119,9 +124,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 </div>
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm text-slate-300">
-                    Paiement unique
-                  </span>
+                  <span className="text-sm text-slate-300">Accès immédiat</span>
                 </div>
               </div>
             </div>
@@ -149,7 +152,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   <h3 className="text-lg font-semibold text-white">
                     Voyance par temps
                   </h3>
-                  <p className="text-sm text-purple-300">Session limitée</p>
+                  <p className="text-sm text-purple-300">Session dédiée</p>
                 </div>
               </div>
 
@@ -161,7 +164,7 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   pour {APP_CONFIG.TIME_BASED.DURATION} minutes
                 </div>
                 <div className="text-xs text-slate-400 mt-1">
-                  Soit {APP_CONFIG.TIME_BASED.PRICE_PER_MINUTE}€ par minute
+                  Session complète dédiée
                 </div>
               </div>
 
@@ -175,13 +178,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-purple-400" />
                   <span className="text-sm text-slate-300">
-                    ~{APP_CONFIG.TIME_BASED.ESTIMATED_MESSAGES} messages
+                    Consultation complète
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-purple-400" />
                   <span className="text-sm text-slate-300">
-                    Idéal pour une question
+                    Session intensive dédiée
                   </span>
                 </div>
               </div>
@@ -234,13 +237,13 @@ const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-blue-400" />
                   <span className="text-sm text-slate-300">
-                    Réponses prioritaires
+                    Accès à tous nos experts
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Check className="w-4 h-4 text-blue-400" />
                   <span className="text-sm text-slate-300">
-                    Tous nos experts
+                    Résiliable à tout moment
                   </span>
                 </div>
               </div>
